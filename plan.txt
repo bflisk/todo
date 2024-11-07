@@ -1,0 +1,69 @@
+Todo program based on waking up series on time management.
+
+Need buckets of tasks.
+- active tasks (max 10)
+- queue bucket (max inf)
+- done list (max inf)
+
+Active bucket:
+- input: choose task from queue bucket to go into active list
+- process:
+	- list tasks in queue bucket
+	- user enters the id of the task they want to add to active bucket
+	- deny user from entering more than x amount of tasks into active bucket
+	- write task from queue csv to active csv
+	- delete task from queue csv
+	- bring user back to main menu
+- output: a new active task list that includes the new task
+
+Queue bucket:
+- input: 
+	- task name
+	- task due date (can be null)
+	- task description (can be null)
+	- task difficulty rating (1 - 3, can be null)
+	- whether the task is part of a project (and what project)
+	- bring user back to main menu
+- process: 
+	- auto-generate timestamp for task
+	- write task to csv file
+- output:
+	- confirmation that the task has been written to active bucket
+
+Done bucket: (User will usually not go here.)
+- input:
+	- task name
+	- task due date (can be null)
+	- task description (can be null)
+	- task difficulty rating (1 - 3, can be null)
+	- whether the task is part of a project (and what project)
+	- bring user back to main menu	
+- process:
+	- user will see done list in the same way they view the queue list
+	- option to add a completed task to bucket
+- output: 
+	- confirmation that the task has been added
+
+Functions:
+
+list_bucket()
+write_bucket()
+
+
+Tables:
+
+Tasks
+	id		: int
+	title		: str
+	description	: str
+	difficulty	: int (1-3)
+	project		: str
+	due_date	: datetime
+	create_date	: datetime	
+	status		: 'active', 'queue', 'done'
+
+------------------------
+FEATURES TO ADD:
+- rot : As the (current date - created date) increases, the rot score increases. Sort tasks shown to user by default by (rot DESC, difficulty ASC)
+- ability for user to add tasks directly to active task list (if less than 10 tasks exist)
+- ask user whether they want to replace the task they just completed or not
