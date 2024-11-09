@@ -44,8 +44,19 @@ def main():
                 print("Invalid input!")
             
             if action == 1:
+                # view list
                 tasks = read_list_from_db(Session, desired_list)
-                display_page(tasks, 0, 5, len(tasks))
+                display_page(Session, tasks, 0, 5, len(tasks))
+            elif action == 2:
+                # add to list
+                pass
+            elif action == 3:
+                # mark as done, only allowed for the "active" and "queue" lists
+                pass
+            elif action == 4:
+                # delete from list
+                pass
+
     
     clear_screen()
     return
@@ -56,7 +67,7 @@ def read_list_from_db(Session, list_id):
     return tasks
 
 # displays ONE PAGE of a user-requested list. Handles multiple pages through recursion. Returns when the user no longer wants to view the list.
-def display_page(l, item_index, page_size, total_task_count):
+def display_page(Session, l, item_index, page_size, total_task_count):
     clear_screen()
 
     page = l[item_index:item_index + page_size] # the current page
@@ -102,15 +113,19 @@ def display_page(l, item_index, page_size, total_task_count):
 
     # handle pagination based on user input
     print('-' * total_line_width)
-    print(f'\n{'<<< back [b] | forward [f] | exit [e] >>>':^{total_line_width}}')
+    print(f'\n{'<<< back [b] | forward [f] | task action [id of task] | exit [ENTER] >>>':^{total_line_width}}')
     direction = input()
 
     if direction == 'f':
         item_index = item_index + page_size if item_index + page_size <= total_task_count else page_size
-        display_page(l, item_index, page_size, total_task_count)
+        display_page(Session, l, item_index, page_size, total_task_count)
     elif direction == 'b':
         item_index = item_index - page_size if item_index + page_size > item_index + page_size else 0 # ensures item_index cannot be less than zero
-        display_page(l, item_index, page_size, total_task_count)
+        display_page(Session, l, item_index, page_size, total_task_count)
+    elif direction == '1':
+        task = retrieve_task(Session, direction)
+        if task:
+            take_action_on_task(Session, task.__dict__)
     elif direction == 'e':
         return
 
@@ -175,6 +190,37 @@ def init_printable_item():
 
     return p
 
+# displays a menu for a given task for the user to interact with. Perform designated action.
+def take_action_on_task(Session, task):
+    session = Session()
+
+    choice = -1
+    while choice not in [1,2,3,0]:
+        clear_screen()
+        print("TODO, or not TODO, that is the question...\n")
+        print("What do you want to do with this task? (enter number)")
+        print("     1) mark as complete")
+        print("     2) move to other list")
+        print("     3) delete\n")
+        print("     0) BACK")
+
+        try:
+            choice = eval(input("\n>>> "))
+        except:
+            pass
+
+        if choice == 1:
+            # mark as complete
+            pass
+        elif choice == 2:
+            # move to other list
+            pass
+        elif choice == 3:
+            # delete task
+            pass
+
+    return
+
 def get_from_list(my_list, index, default=None):
     # returns
     try:
@@ -182,11 +228,17 @@ def get_from_list(my_list, index, default=None):
     except:
        return default
 
+# retrieves a single task from the db using task id
+def retrieve_task(Session, task_id):
+    session = Session()
+    task = session.query(Task).filter(Task.id == task_id).first()
+    return task
+
 def append_list(session, list_name):
     return
 
+# OS-agnostic function to clear the screen
 def clear_screen():
-    # OS-agnostic function to clear the screen
     if os.name == 'posix':  # Unix-based systems
         os.system('clear')
     elif os.name == 'nt':  # Windows
