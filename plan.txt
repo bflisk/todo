@@ -67,3 +67,7 @@ FEATURES TO ADD:
 - rot : As the (current date - created date) increases, the rot score increases. Sort tasks shown to user by default by (rot DESC, difficulty ASC)
 - ability for user to add tasks directly to active task list (if less than 10 tasks exist)
 - ask user whether they want to replace the task they just completed or not
+- program must calculate rot factor when user opens the program
+- a "de-rotter". This would be used in the event that I have not done a bunch of tasks. Give option to either completely
+    reset rot factor for all tasks or to divide rot factor by 2 for all tasks. The second option still allows me to determine
+    which tasks are more rotten than others
