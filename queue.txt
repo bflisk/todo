@@ -1,0 +1,11 @@
+Describes the queue object and what can be done with it
+
+DEFINITION: Contains tasks that have not been completed, but are not currently being worked on
+ASPECTS:
+- Task rot (1-10): Defines how long a task has existed inside the queue object
+    - must be calculated on program run using (current_date - dtm_created)
+- Task difficulty (1-5): Defines how personally difficult the task will be
+ACTIONS:
+- "add": Add a task to the queue object, no limit on number of tasks to be added.
+- "remove": Remove a task from the queue object. Ask for the id of a task to remove.
+- "done": Mark as task as finished using the id of the task. Move this task to the DONE object

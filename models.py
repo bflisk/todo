@@ -13,6 +13,7 @@ class Task(Base):
     title = Column(String)
     description = Column(String(500))
     difficulty = Column(Integer)
+    rot = Column(Integer)
     project = Column(String)
     due_date  = Column(String)
     create_date = Column(String)
