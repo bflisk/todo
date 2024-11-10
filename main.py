@@ -1,9 +1,16 @@
+from venv import create
+
+from sqlalchemy.orm.sync import clear
+
 from models import Task
 from sqlalchemy import create_engine, desc
 from sqlalchemy.orm import sessionmaker
 import os
+import time
+from datetime import datetime, timedelta
 
-LISTS = {1: "active", 2: "queue", 3: "done", 4: "trash"}
+LISTS = {1: "active", 2: "queue", 3: "done"}
+ACTIVE_LIST_TASK_CAP = 5
 
 def main():
     engine = create_engine('sqlite:///todo.db')
@@ -16,7 +23,7 @@ def main():
     #tasks = session.query(Task).filter(Task.id == 1).first()
     while desired_list != 0:
         clear_screen()
-        print("TODO, or not TODO, that is the question...\n")
+        print("\033[32mTODO, or not TODO, that is the question...\n")
         print("What list do you want to interact with? (enter number)")
         print("     1) active")
         print("     2) queue")
@@ -33,9 +40,7 @@ def main():
             print("TODO, or not TODO, that is the question...\n")
             print("What do you want to do? (enter number)")
             print("     1) view list")
-            print("     2) add to list")
-            print("     3) mark as done") if desired_list in [1, 2] else 0 # Do not allow this option for the "done" list
-            print("     4) delete from list\n")
+            print("     2) add to list\n")
             print("     0) BACK")
             
             try:
@@ -46,17 +51,19 @@ def main():
             if action == 1:
                 # view list
                 tasks = read_list_from_db(Session, desired_list)
-                display_page(Session, tasks, 0, 5, len(tasks))
+                display_page(Session, desired_list, tasks, 0, 5, len(tasks))
             elif action == 2:
                 # add to list
-                pass
-            elif action == 3:
-                # mark as done, only allowed for the "active" and "queue" lists
-                pass
-            elif action == 4:
-                # delete from list
-                pass
-
+                if desired_list == 1:
+                    # cap the active list to a certain number of tasks
+                    active_list_task_count = session.query(Task).filter(Task.status == 1).count()
+                    if active_list_task_count < ACTIVE_LIST_TASK_CAP:
+                        create_new_task(Session, desired_list)
+                    else:
+                        print("Too many active tasks!")
+                        time.sleep(2)
+                else:
+                    create_new_task(Session, desired_list)
     
     clear_screen()
     return
@@ -66,8 +73,49 @@ def read_list_from_db(Session, list_id):
     tasks = session.query(Task).filter(Task.status == list_id).order_by(desc(Task.rot)).all()
     return tasks
 
-# displays ONE PAGE of a user-requested list. Handles multiple pages through recursion. Returns when the user no longer wants to view the list.
-def display_page(Session, l, item_index, page_size, total_task_count):
+def create_new_task(Session, list_id):
+    session = Session()
+
+    clear_screen()
+    try:
+        title = input("Title: ")
+        description = input("Description: ")
+        difficulty = eval(input("Expected difficulty: "))
+        project = input("Project: ")
+        days_to_add = eval(input("Days to complete: "))
+    except:
+        print("Invalid input!")
+        time.sleep(2)
+        return
+
+    # generate create_date
+    current_time = time.localtime()
+    formatted_date = time.strftime("%Y-%m-%d", current_time)
+
+    # generate due_date given user input
+    date_obj = datetime.strptime(formatted_date, "%Y-%m-%d")
+    due_date = date_obj + timedelta(days=days_to_add)
+    due_date_formatted = due_date.strftime("%Y-%m-%d")
+
+    new_task = Task(
+        title=title,
+        description=description,
+        difficulty=difficulty,
+        project=project,
+        due_date=due_date_formatted,
+        create_date=formatted_date,
+        status=list_id,
+        rot=1
+    )
+
+    session.add(new_task)
+    session.commit()
+
+    return
+
+# displays ONE PAGE of a user-requested list and allows user to take action on 1 task in that page. Handles multiple pages through recursion.
+# Returns when the user no longer wants to view the list.
+def display_page(Session, list_id, l, item_index, page_size, total_task_count):
     clear_screen()
 
     page = l[item_index:item_index + page_size] # the current page
@@ -118,14 +166,13 @@ def display_page(Session, l, item_index, page_size, total_task_count):
 
     if direction == 'f':
         item_index = item_index + page_size if item_index + page_size <= total_task_count else page_size
-        display_page(Session, l, item_index, page_size, total_task_count)
+        display_page(Session, list_id, l, item_index, page_size, total_task_count)
     elif direction == 'b':
         item_index = item_index - page_size if item_index + page_size > item_index + page_size else 0 # ensures item_index cannot be less than zero
-        display_page(Session, l, item_index, page_size, total_task_count)
-    elif direction == '1':
-        task = retrieve_task(Session, direction)
-        if task:
-            take_action_on_task(Session, task.__dict__)
+        display_page(Session, list_id, l, item_index, page_size, total_task_count)
+    elif direction.isnumeric():
+        # the user wants to perform an action on a specific task
+        take_action_on_task(Session, list_id, direction)
     elif direction == 'e':
         return
 
@@ -191,33 +238,72 @@ def init_printable_item():
     return p
 
 # displays a menu for a given task for the user to interact with. Perform designated action.
-def take_action_on_task(Session, task):
+def take_action_on_task(Session, list_id, task_id):
+    clear_screen()
+
     session = Session()
+    task = session.query(Task).filter(Task.id == task_id).filter(Task.status == list_id).first()
 
-    choice = -1
-    while choice not in [1,2,3,0]:
-        clear_screen()
-        print("TODO, or not TODO, that is the question...\n")
-        print("What do you want to do with this task? (enter number)")
-        print("     1) mark as complete")
-        print("     2) move to other list")
-        print("     3) delete\n")
-        print("     0) BACK")
+    if task:
+        choice = -1
+        while choice not in [1,2,3,0]:
+            clear_screen()
+            print("TODO, or not TODO, that is the question...\n")
+            print("What do you want to do with this task? (enter number)")
+            print("     1) mark as complete")
+            print("     2) move to other list")
+            print("     3) delete\n")
+            print("     0) BACK")
 
-        try:
-            choice = eval(input("\n>>> "))
-        except:
-            pass
+            try:
+                choice = eval(input("\n>>> "))
+            except:
+                pass
 
-        if choice == 1:
-            # mark as complete
-            pass
-        elif choice == 2:
-            # move to other list
-            pass
-        elif choice == 3:
-            # delete task
-            pass
+            if choice == 1:
+                # mark as complete
+                session.query(Task).filter(Task.id == task_id).update({Task.status: 3})
+                session.commit()
+                print("\033[33mEPIC!!!\033[32m")
+            elif choice == 2:
+                clear_screen()
+                # move to other list
+                print("Which list would you like to move this task to?")
+                print("     1) active")
+                print("     2) queue")
+                print("     3) done\n")
+                print("     0) BACK")
+
+                try:
+                    move_list_choice = eval(input("\n>>> "))
+                except:
+                    return
+
+                if move_list_choice in [1,2,3]:
+                    if move_list_choice == 1:
+                        # cap the active list to a certain number of tasks
+                        active_list_task_count = session.query(Task).filter(Task.status == 1).count()
+                        if active_list_task_count < ACTIVE_LIST_TASK_CAP:
+                            session.query(Task).filter(Task.id == task_id).update({Task.status: move_list_choice})
+                            session.commit()
+                        else:
+                            print("Too many active tasks!")
+                            time.sleep(2)
+                    else:
+                        session.query(Task).filter(Task.id == task_id).update({Task.status: move_list_choice})
+                        session.commit()
+            elif choice == 3:
+                # delete task
+                clear_screen()
+                print(f"Are you sure you want to delete task with id {task_id} and title {task.title}? (y/n)")
+                delete_confirmation = input(">>> ")
+
+                if delete_confirmation == 'y':
+                    session.query(Task).filter(Task.id == task_id).delete()
+                    session.commit()
+    else:
+        print(f"No task exists with id {task_id} in this list! (Press ENTER to continue)")
+        input()
 
     return
 
