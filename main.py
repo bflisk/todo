@@ -70,7 +70,7 @@ def main():
 
 def read_list_from_db(Session, list_id):
     session = Session()
-    tasks = session.query(Task).filter(Task.status == list_id).order_by(desc(Task.rot)).all()
+    tasks = session.query(Task).filter(Task.status == list_id).order_by(desc(Task.rot)).order_by(Task.due_date).all()
     return tasks
 
 def create_new_task(Session, list_id):
@@ -206,7 +206,7 @@ def init_printable_item():
             "text": []
         },
         "title": {
-            "column_length": 10,
+            "column_length": 20,
             "text": []
         },
         "description": {
@@ -218,7 +218,7 @@ def init_printable_item():
             "text": []
         },
         "project": {
-            "column_length": 7,
+            "column_length": 20,
             "text": []
         },
         "due_date": {
