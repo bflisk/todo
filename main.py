@@ -70,7 +70,7 @@ def main():
 
 def read_list_from_db(Session, list_id):
     session = Session()
-    tasks = session.query(Task).filter(Task.status == list_id).order_by(desc(Task.rot)).order_by(Task.due_date).all()
+    tasks = session.query(Task).filter(Task.status == list_id).order_by(desc(Task.done_date)).order_by(desc(Task.rot)).order_by(Task.due_date).all()
     return tasks
 
 def create_new_task(Session, list_id):
