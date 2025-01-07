@@ -230,6 +230,10 @@ def init_printable_item():
             "column_length": 12,
             "text": []
         },
+        "done_date": {
+            "column_length": 12,
+            "text": []
+        },
         "rot": {
             "column_length": 3,
             "text": []
@@ -264,6 +268,7 @@ def take_action_on_task(Session, list_id, task_id):
             if choice == 1:
                 # mark as complete
                 session.query(Task).filter(Task.id == task_id).update({Task.status: 3})
+                session.query(Task).filter(Task.id == task_id).update({Task.done_date: time.strftime("%Y-%m-%d", time.localtime())})
                 session.commit()
                 print("\033[33mEPIC!!!\033[32m")
             elif choice == 2:

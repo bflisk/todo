@@ -17,6 +17,7 @@ class Task(Base):
     project = Column(String)
     due_date  = Column(String)
     create_date = Column(String)
+    done_date = Column(String)
     status = Column(String)
 
 Base.metadata.create_all(engine)
