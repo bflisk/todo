@@ -19,6 +19,9 @@ def main():
     
     desired_list = -1
     action = -1
+
+    # update the rot of all tasks before user is able to make their decision
+    update_rot(Session)
     
     #tasks = session.query(Task).filter(Task.id == 1).first()
     while desired_list != 0:
@@ -337,6 +340,28 @@ def clear_screen():
         os.system('cls')
 
     return
+    
+# update the rot of each task when launching the program
+def update_rot(Session):
+    session = Session()
+
+    formatted_date = time.strftime("%Y-%m-%d", time.localtime())
+    current_date = datetime.strptime(formatted_date, "%Y-%m-%d")
+
+    # update rot for all tasks in applicable lists
+    lists = []
+    lists.append(read_list_from_db(Session, 1)) # active tasks
+    lists.append(read_list_from_db(Session, 2)) # queue tasks
+
+    for list in lists:
+        for task in list:
+            due_date = datetime.strptime(task.due_date, "%Y-%m-%d")
+
+            if due_date < current_date:
+                delta = current_date - due_date
+                session.query(Task).filter(Task.id == task.id).update({Task.rot: delta.days})
+
+    session.commit()
 
 if __name__ == "__main__":
     main()
