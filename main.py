@@ -161,7 +161,7 @@ def display_page(Session, list_id, l, item_index, page_size, total_task_count):
 
     # handle pagination based on user input
     print('-' * total_line_width)
-    print(f'\n{'<<< back [b] | forward [f] | task action [id of task] | exit [ENTER] >>>':^{total_line_width}}')
+    print(f'\n{"<<< back [b] | forward [f] | task action [id of task] | exit [ENTER] >>>":^{total_line_width}}')
     direction = input()
 
     if direction == 'f':
@@ -190,7 +190,8 @@ def print_printable_item(printable_item, divider=''):
         line = ""
 
         for k in printable_item.keys():
-            line += f'{get_from_list(printable_item[k]["text"], depth, default=''):<{printable_item[k]["column_length"]}}' + divider
+            line += f'{get_from_list(printable_item[k]["text"], depth, default=""):<{printable_item[k]["column_length"]}}' + divider
+
 
         print(line)
 
@@ -206,7 +207,7 @@ def init_printable_item():
             "text": []
         },
         "title": {
-            "column_length": 20,
+            "column_length": 30,
             "text": []
         },
         "description": {
