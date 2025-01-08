@@ -19,9 +19,6 @@ def main():
     
     desired_list = -1
     action = -1
-
-    # update the rot of all tasks before user is able to make their decision
-    update_rot(Session)
     
     #tasks = session.query(Task).filter(Task.id == 1).first()
     while desired_list != 0:
@@ -52,6 +49,9 @@ def main():
                 print("Invalid input!")
             
             if action == 1:
+                # update rot for all tasks before viewing any list
+                update_rot(Session)
+
                 # view list
                 tasks = read_list_from_db(Session, desired_list)
                 display_page(Session, desired_list, tasks, 0, 5, len(tasks))
